@@ -11,22 +11,35 @@
 ## upload your data set as a txt file created with write.table() using row.name=FALSE
 
 
-## library(ggplot2)
-## setwd("~/Documents/uni/courserarprog/exploratory")
-## NEI <- readRDS("summarySCC_PM25.rds")
-## SCC <- readRDS("Source_Classification_Code.rds")
+## library(dplyr)
+##  setwd("~/Documents/uni/courserarprog/gettingdata/ActivityData")
 
-download.file("https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2FGDP.csv","GDP.csv",method="curl")
-download.file("https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2FEDSTATS_Country.csv","country.csv",method="curl")
+# activity data is listed as a row of 561 variables, these 561 variable names are listed in features.txt
+features <- read.delim("features.txt",header=FALSE,colClasses="character",sep=" ",strip.white=TRUE, stringsAsFactors=FALSE)
 
-gdp.data <- tbl_df(read.csv("GDP.csv", stringsAsFactors=FALSE))
-gdp.data <- rename(gdp.data, rank=Gross.domestic.product.2012)
-gdp.data <- filter(gdp.data,X!="")
-gdp.data <- filter(gdp.data,rank!="")
+# read the activity data with the features as the column names (tidy data principle each variable forms a column)
+alldata <- read.table("x_test.txt",colClasses="numeric",col.names=features[,2])
+alldata <- rbind(alldata,read.table("x_train.txt",colClasses="numeric",col.names=features[,2]))
 
-country.data <- tbl_df(read.csv("country.csv", stringsAsFactors=FALSE))
+# take the activity and subject information across test and training groups 
+activities <- read.table("y_test.txt",stringsAsFactors=FALSE)
+activities <- rbind(activities, read.table("y_train.txt",stringsAsFactors=FALSE))
+subjects <- read.table("subject_test.txt",stringsAsFactors=FALSE)
+subjects <- rbind(subjects,read.table("subject_train.txt",stringsAsFactors=FALSE))
 
+# merge activity and subject ids into one table (tidy data principle each observation forms a row)
+subacts <- tbl_df(cbind(activities,subjects))
+names(subacts) <- c("activity_id","subject_id")
+actnames <- tbl_df(read.table("activity_labels.txt",col.names=c("activity_id","activity"), stringsAsFactors=FALSE))
+subacts<- merge(subacts,actnames,by="activity_id")
+subacts <- as.data.frame(select(subacts,-activity_id))
 
+# combine the activity and subject identifiers with the observations )
+alldata <- tbl_df(cbind(subacts,alldata))
+tidydata <- alldata
 
+              
+
+# (tidy data principle each obs unit forms a table)
 
 
